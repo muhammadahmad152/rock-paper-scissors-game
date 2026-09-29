@@ -1,0 +1,2137 @@
+/* =========================================================
+   ROCK PAPER SCISSORS
+   Advanced Bio-Cyber Arena
+   ---------------------------------------------------------
+   Yeh version thoda zyada alive feel karega:
+   - animated background atmosphere
+   - moving grid + floating particles
+   - glass card with holographic edge
+   - 3D score panels
+   - animated battle pods
+   - premium button interactions
+   - win / lose / tie visual feedback
+   - responsive mobile layout
+   ========================================================= */
+
+
+/* =========================
+   1. Main Design Variables
+   ========================= */
+
+:root {
+    --bg-main: #020506;
+    --bg-deep: #050b0d;
+    --bg-panel: rgba(10, 20, 22, .72);
+
+    --cyan: #55f6e5;
+    --cyan-bright: #9ffff4;
+    --teal: #16c8b5;
+
+    --purple: #9b7cff;
+    --pink: #ff5fa2;
+
+    --gold: #ffc857;
+    --red: #ff5470;
+
+    --white: #f4fffd;
+    --text: #d7e7e5;
+    --muted: #718583;
+    --dim: #40504e;
+
+    --glass-border: rgba(159, 255, 244, .12);
+    --glass-white: rgba(255, 255, 255, .045);
+
+    --cyan-glow:
+        0 0 12px rgba(85, 246, 229, .5),
+        0 0 45px rgba(85, 246, 229, .16);
+
+    --purple-glow:
+        0 0 15px rgba(155, 124, 255, .5),
+        0 0 50px rgba(155, 124, 255, .15);
+
+    --red-glow:
+        0 0 15px rgba(255, 84, 112, .5),
+        0 0 45px rgba(255, 84, 112, .15);
+
+    --gold-glow:
+        0 0 15px rgba(255, 200, 87, .5),
+        0 0 45px rgba(255, 200, 87, .15);
+
+    --deep-shadow:
+        0 45px 120px rgba(0, 0, 0, .75),
+        0 15px 50px rgba(0, 0, 0, .45);
+
+    --spring: cubic-bezier(.16, 1, .3, 1);
+    --smooth: cubic-bezier(.4, 0, .2, 1);
+
+    --radius-xl: 38px;
+    --radius-lg: 24px;
+    --radius-md: 17px;
+    --radius-sm: 12px;
+}
+
+
+/* =========================
+   2. Basic Reset
+   ========================= */
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+html {
+    min-height: 100%;
+    color-scheme: dark;
+}
+
+body {
+    min-height: 100vh;
+    margin: 0;
+    padding: clamp(14px, 4vw, 60px);
+
+    display: grid;
+    place-items: center;
+
+    color: var(--white);
+
+    font-family:
+        Inter,
+        "SF Pro Display",
+        "Segoe UI",
+        system-ui,
+        sans-serif;
+
+    overflow-x: hidden;
+
+    background:
+        var(--bg-main);
+}
+
+button,
+select {
+    font: inherit;
+}
+
+button {
+    -webkit-tap-highlight-color: transparent;
+}
+
+::selection {
+    color: #02100e;
+    background: var(--cyan);
+}
+
+
+/* =========================================================
+   3. Animated Background
+   ========================================================= */
+
+body::before {
+    content: "";
+
+    position: fixed;
+    inset: -20%;
+
+    z-index: -10;
+    pointer-events: none;
+
+    background:
+
+        /* Cyan atmosphere */
+        radial-gradient(
+            ellipse 45% 35% at 15% 20%,
+            rgba(22, 200, 181, .16),
+            transparent 70%
+        ),
+
+        /* Purple atmosphere */
+        radial-gradient(
+            ellipse 42% 38% at 88% 18%,
+            rgba(155, 124, 255, .13),
+            transparent 70%
+        ),
+
+        /* Pink atmosphere */
+        radial-gradient(
+            ellipse 35% 40% at 92% 82%,
+            rgba(255, 95, 162, .08),
+            transparent 70%
+        ),
+
+        /* Bottom teal glow */
+        radial-gradient(
+            ellipse 60% 40% at 40% 110%,
+            rgba(22, 200, 181, .12),
+            transparent 70%
+        ),
+
+        linear-gradient(
+            135deg,
+            #010304 0%,
+            #031013 35%,
+            #050b12 65%,
+            #020506 100%
+        );
+
+    animation:
+        backgroundDrift 18s ease-in-out infinite alternate;
+}
+
+
+/* Moving technical grid */
+
+body::after {
+    content: "";
+
+    position: fixed;
+    inset: 0;
+
+    z-index: -9;
+    pointer-events: none;
+
+    background-image:
+        linear-gradient(
+            rgba(85, 246, 229, .026) 1px,
+            transparent 1px
+        ),
+        linear-gradient(
+            90deg,
+            rgba(85, 246, 229, .026) 1px,
+            transparent 1px
+        );
+
+    background-size: 55px 55px;
+
+    mask-image:
+        radial-gradient(
+            ellipse at center,
+            black 5%,
+            transparent 78%
+        );
+
+    animation:
+        gridScroll 28s linear infinite;
+}
+
+
+/* =========================
+   4. Main Glass Arena
+   ========================= */
+
+.game-card {
+    position: relative;
+    isolation: isolate;
+
+    width: min(780px, 100%);
+
+    padding: clamp(25px, 5vw, 55px);
+
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-xl);
+
+    background:
+        linear-gradient(
+            145deg,
+            rgba(255,255,255,.065),
+            rgba(255,255,255,.018) 45%,
+            rgba(10,20,22,.72)
+        );
+
+    backdrop-filter:
+        blur(35px)
+        saturate(145%);
+
+    -webkit-backdrop-filter:
+        blur(35px)
+        saturate(145%);
+
+    box-shadow: var(--deep-shadow);
+
+    overflow: hidden;
+
+    transform-style: preserve-3d;
+
+    animation:
+        cardEntrance
+        1.1s
+        var(--spring)
+        both;
+}
+
+
+/* Holographic moving border */
+
+.game-card::before {
+    content: "";
+
+    position: absolute;
+    inset: -2px;
+
+    border-radius: inherit;
+
+    padding: 1px;
+
+    background:
+        conic-gradient(
+            from 0deg,
+            transparent,
+            var(--cyan),
+            transparent 18%,
+            transparent 35%,
+            var(--purple),
+            transparent 55%,
+            transparent 75%,
+            var(--pink),
+            transparent
+        );
+
+    opacity: .55;
+
+    -webkit-mask:
+        linear-gradient(#000 0 0) content-box,
+        linear-gradient(#000 0 0);
+
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+
+    animation:
+        hologramSpin
+        12s
+        linear
+        infinite;
+
+    pointer-events: none;
+}
+
+
+/* Large soft light inside the card */
+
+.game-card::after {
+    content: "";
+
+    position: absolute;
+
+    width: 520px;
+    height: 520px;
+
+    top: -380px;
+    left: 50%;
+
+    transform: translateX(-50%);
+
+    border-radius: 50%;
+
+    background:
+        radial-gradient(
+            circle,
+            rgba(85,246,229,.18),
+            rgba(155,124,255,.045) 38%,
+            transparent 70%
+        );
+
+    filter: blur(25px);
+
+    pointer-events: none;
+
+    animation:
+        reactorBreath
+        7s
+        ease-in-out
+        infinite;
+}
+
+
+/* =========================
+   5. Heading
+   ========================= */
+
+h1 {
+    position: relative;
+    z-index: 2;
+
+    margin: 0 0 42px;
+
+    text-align: center;
+
+    font-size:
+        clamp(2.2rem, 7vw, 4rem);
+
+    line-height: .9;
+
+    font-weight: 950;
+
+    letter-spacing: -.075em;
+
+    background:
+        linear-gradient(
+            110deg,
+            #ffffff 5%,
+            var(--cyan-bright) 28%,
+            var(--cyan) 43%,
+            #ffffff 51%,
+            var(--purple) 73%,
+            #ffffff 95%
+        );
+
+    background-size: 250% auto;
+
+    -webkit-background-clip: text;
+    background-clip: text;
+
+    -webkit-text-fill-color: transparent;
+
+    filter:
+        drop-shadow(
+            0 0 20px rgba(85,246,229,.14)
+        );
+
+    animation:
+        titleEntrance .9s var(--spring) .1s both,
+        titleShimmer 7s linear infinite;
+}
+
+
+/* Small futuristic line below heading */
+
+h1::after {
+    content: "";
+
+    position: absolute;
+
+    left: 50%;
+    bottom: -19px;
+
+    width: 95px;
+    height: 1px;
+
+    transform: translateX(-50%);
+
+    background:
+        linear-gradient(
+            90deg,
+            transparent,
+            var(--cyan),
+            var(--purple),
+            transparent
+        );
+
+    box-shadow:
+        0 0 12px var(--cyan);
+
+    animation:
+        titleLine 3s ease-in-out infinite;
+}
+
+
+/* =========================
+   6. Game Mode Selector
+   ========================= */
+
+.mode-select {
+    position: relative;
+
+    width: 100%;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 15px;
+
+    margin-bottom: 15px;
+    padding: 7px 8px 7px 18px;
+
+    border:
+        1px solid rgba(255,255,255,.08);
+
+    border-radius: var(--radius-md);
+
+    background:
+        rgba(255,255,255,.025);
+
+    overflow: hidden;
+
+    transition:
+        transform .45s var(--spring),
+        border-color .35s ease,
+        box-shadow .35s ease;
+}
+
+.mode-select:hover {
+    transform: translateY(-2px);
+
+    border-color:
+        rgba(85,246,229,.3);
+
+    box-shadow:
+        0 12px 35px rgba(0,0,0,.2),
+        0 0 30px rgba(85,246,229,.04);
+}
+
+.mode-select::before {
+    content: "";
+
+    position: absolute;
+
+    top: 0;
+    bottom: 0;
+
+    left: -100%;
+
+    width: 60%;
+
+    background:
+        linear-gradient(
+            90deg,
+            transparent,
+            rgba(85,246,229,.1),
+            transparent
+        );
+
+    transform: skewX(-20deg);
+
+    transition:
+        left .9s var(--spring);
+}
+
+.mode-select:hover::before {
+    left: 150%;
+}
+
+.mode-select label {
+    color: var(--muted);
+
+    font-size: .64rem;
+    font-weight: 900;
+
+    letter-spacing: .18em;
+    text-transform: uppercase;
+}
+
+#game-mode {
+    appearance: none;
+
+    min-width: 155px;
+
+    padding: 10px 34px 10px 13px;
+
+    border:
+        1px solid rgba(85,246,229,.18);
+
+    border-radius: 10px;
+
+    outline: none;
+
+    color: var(--cyan-bright);
+
+    background:
+        linear-gradient(
+            135deg,
+            rgba(85,246,229,.08),
+            rgba(155,124,255,.035)
+        );
+
+    cursor: pointer;
+
+    transition:
+        .35s var(--spring);
+}
+
+#game-mode:hover,
+#game-mode:focus {
+    border-color: var(--cyan);
+
+    box-shadow: var(--cyan-glow);
+
+    transform: translateY(-1px);
+}
+
+#game-mode option {
+    color: white;
+    background: #071014;
+}
+
+
+/* =========================
+   7. High Score
+   ========================= */
+
+.high-score {
+    width: fit-content;
+
+    margin: 5px auto 30px;
+    padding: 7px 15px;
+
+    border:
+        1px solid rgba(255,200,87,.16);
+
+    border-radius: 999px;
+
+    color: var(--muted);
+
+    background:
+        rgba(255,200,87,.025);
+
+    font-size: .63rem;
+    font-weight: 900;
+
+    letter-spacing: .15em;
+    text-transform: uppercase;
+
+    animation:
+        badgeFloat 4s ease-in-out infinite;
+}
+
+.high-score::before {
+    content: "◆";
+
+    margin-right: 7px;
+
+    color: var(--gold);
+
+    text-shadow:
+        0 0 12px var(--gold);
+}
+
+#high-score {
+    color: #ffe19a;
+
+    text-shadow:
+        0 0 14px rgba(255,200,87,.5);
+}
+
+
+/* =========================
+   8. Scoreboard
+   ========================= */
+
+.scoreboard {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+
+    gap: 15px;
+
+    margin-bottom: 32px;
+}
+
+.score-box {
+    position: relative;
+
+    min-height: 125px;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    border:
+        1px solid rgba(255,255,255,.075);
+
+    border-radius: var(--radius-lg);
+
+    background:
+        linear-gradient(
+            145deg,
+            rgba(255,255,255,.055),
+            rgba(255,255,255,.01)
+        );
+
+    overflow: hidden;
+
+    transform-style: preserve-3d;
+
+    transition:
+        transform .5s var(--spring),
+        border-color .35s ease,
+        box-shadow .4s ease;
+}
+
+
+/* Soft light on score cards */
+
+.score-box::before {
+    content: "";
+
+    position: absolute;
+
+    width: 220px;
+    height: 220px;
+
+    top: -170px;
+    left: 50%;
+
+    transform: translateX(-50%);
+
+    border-radius: 50%;
+
+    background:
+        radial-gradient(
+            circle,
+            rgba(85,246,229,.13),
+            transparent 68%
+        );
+
+    filter: blur(12px);
+}
+
+.score-box::after {
+    content: "";
+
+    position: absolute;
+
+    left: 15%;
+    right: 15%;
+    bottom: 0;
+
+    height: 1px;
+
+    background:
+        linear-gradient(
+            90deg,
+            transparent,
+            var(--cyan),
+            transparent
+        );
+
+    box-shadow:
+        0 0 15px var(--cyan);
+
+    opacity: .35;
+}
+
+.score-box:hover {
+    transform:
+        translateY(-7px)
+        perspective(700px)
+        rotateX(4deg);
+
+    border-color:
+        rgba(85,246,229,.25);
+
+    box-shadow:
+        0 25px 55px rgba(0,0,0,.35),
+        0 0 35px rgba(85,246,229,.06);
+}
+
+.score-box .label {
+    color: var(--muted);
+
+    font-size: .62rem;
+    font-weight: 900;
+
+    letter-spacing: .2em;
+    text-transform: uppercase;
+}
+
+.score {
+    margin-top: 7px;
+
+    font-size:
+        clamp(2.7rem, 8vw, 4rem);
+
+    line-height: .9;
+
+    font-weight: 950;
+
+    font-variant-numeric: tabular-nums;
+
+    color: var(--white);
+
+    text-shadow:
+        0 0 25px rgba(85,246,229,.18);
+}
+
+
+/* =========================
+   9. Battlefield
+   ========================= */
+
+.battlefield {
+    position: relative;
+
+    display: grid;
+
+    grid-template-columns:
+        1fr auto 1fr;
+
+    align-items: center;
+
+    gap: clamp(12px, 5vw, 45px);
+
+    margin-bottom: 32px;
+}
+
+
+/* Energy line between players */
+
+.battlefield::before {
+    content: "";
+
+    position: absolute;
+
+    left: 10%;
+    right: 10%;
+    top: 50%;
+
+    height: 1px;
+
+    transform: translateY(-50%);
+
+    background:
+        linear-gradient(
+            90deg,
+            transparent,
+            rgba(85,246,229,.2),
+            var(--cyan),
+            rgba(155,124,255,.35),
+            transparent
+        );
+
+    box-shadow:
+        0 0 12px rgba(85,246,229,.35);
+
+    opacity: .55;
+
+    animation:
+        energyLine 2.5s ease-in-out infinite;
+}
+
+
+/* =========================
+   10. Battle Choice Pods
+   ========================= */
+
+.choice-display {
+    position: relative;
+
+    width: min(155px, 100%);
+    aspect-ratio: 1;
+
+    justify-self: center;
+
+    display: grid;
+    place-items: center;
+
+    border:
+        1px solid rgba(255,255,255,.1);
+
+    border-radius: 28%;
+
+    background:
+        radial-gradient(
+            circle at 28% 20%,
+            rgba(255,255,255,.08),
+            transparent 35%
+        ),
+        linear-gradient(
+            145deg,
+            rgba(255,255,255,.045),
+            rgba(255,255,255,.008)
+        );
+
+    font-size:
+        clamp(3.2rem, 9vw, 5rem);
+
+    box-shadow:
+        inset 0 0 45px rgba(85,246,229,.015),
+        0 25px 65px rgba(0,0,0,.4);
+
+    transform-style: preserve-3d;
+
+    transition:
+        transform .55s var(--spring),
+        border-color .4s ease,
+        box-shadow .4s ease;
+}
+
+
+/* Outer orbit */
+
+.choice-display::before {
+    content: "";
+
+    position: absolute;
+    inset: -8px;
+
+    border-radius: 31%;
+
+    border:
+        1px solid rgba(85,246,229,.15);
+
+    border-top-color: var(--cyan);
+    border-right-color: var(--purple);
+
+    animation:
+        podRotation
+        8s
+        linear
+        infinite;
+}
+
+
+/* Inner energy */
+
+.choice-display::after {
+    content: "";
+
+    position: absolute;
+
+    inset: 17%;
+
+    border-radius: 50%;
+
+    background:
+        radial-gradient(
+            circle,
+            rgba(85,246,229,.12),
+            transparent 68%
+        );
+
+    filter: blur(13px);
+
+    z-index: -1;
+
+    animation:
+        podPulse
+        3.5s
+        ease-in-out
+        infinite;
+}
+
+.choice-display:hover {
+    transform:
+        translateY(-9px)
+        rotateX(8deg)
+        rotateY(-6deg)
+        scale(1.035);
+
+    border-color:
+        rgba(85,246,229,.35);
+
+    box-shadow:
+        0 30px 75px rgba(0,0,0,.45),
+        0 0 45px rgba(85,246,229,.08);
+}
+
+
+/* =========================
+   11. VS Core
+   ========================= */
+
+.vs {
+    position: relative;
+    z-index: 3;
+
+    width: 56px;
+    height: 56px;
+
+    display: grid;
+    place-items: center;
+
+    border:
+        1px solid rgba(85,246,229,.18);
+
+    border-radius: 50%;
+
+    color: var(--cyan-bright);
+
+    background:
+        radial-gradient(
+            circle,
+            rgba(85,246,229,.09),
+            rgba(255,255,255,.015)
+        );
+
+    font-size: .58rem;
+    font-weight: 950;
+
+    letter-spacing: .15em;
+
+    box-shadow:
+        0 0 0 7px rgba(2,6,8,.78),
+        0 0 28px rgba(85,246,229,.08);
+
+    animation:
+        vsHover 3s ease-in-out infinite;
+}
+
+.vs::before {
+    content: "";
+
+    position: absolute;
+    inset: -9px;
+
+    border:
+        1px dashed rgba(85,246,229,.2);
+
+    border-radius: 50%;
+
+    animation:
+        podRotation
+        10s
+        linear
+        infinite reverse;
+}
+
+.vs::after {
+    content: "";
+
+    position: absolute;
+
+    top: 1px;
+
+    width: 6px;
+    height: 6px;
+
+    border-radius: 50%;
+
+    background: var(--cyan);
+
+    box-shadow:
+        0 0 10px var(--cyan),
+        0 0 25px var(--cyan);
+
+    animation:
+        corePulse
+        1.5s
+        ease-in-out
+        infinite;
+}
+
+
+/* =========================
+   12. Instruction
+   ========================= */
+
+.instruction {
+    margin: 0 0 16px;
+
+    color: var(--muted);
+
+    font-size: .63rem;
+    font-weight: 900;
+
+    letter-spacing: .22em;
+
+    text-align: center;
+    text-transform: uppercase;
+}
+
+
+/* =========================
+   13. Rock / Paper / Scissors
+   ========================= */
+
+.buttons {
+    display: grid;
+
+    grid-template-columns:
+        repeat(3, 1fr);
+
+    gap: 14px;
+
+    margin-bottom: 27px;
+}
+
+.buttons button {
+    position: relative;
+
+    min-height: 108px;
+
+    display: grid;
+    place-items: center;
+
+    border:
+        1px solid rgba(255,255,255,.09);
+
+    border-radius: 22px;
+
+    color: white;
+
+    background:
+        linear-gradient(
+            145deg,
+            rgba(255,255,255,.06),
+            rgba(255,255,255,.012)
+        );
+
+    font-size:
+        clamp(2.2rem, 7vw, 3rem);
+
+    cursor: pointer;
+
+    overflow: hidden;
+
+    transform-style: preserve-3d;
+
+    box-shadow:
+        inset 0 1px rgba(255,255,255,.055),
+        0 15px 35px rgba(0,0,0,.22);
+
+    transition:
+        transform .45s var(--spring),
+        border-color .3s ease,
+        box-shadow .4s ease,
+        background .3s ease;
+}
+
+
+/* Moving glass reflection */
+
+.buttons button::before {
+    content: "";
+
+    position: absolute;
+
+    top: -100%;
+    left: -80%;
+
+    width: 45%;
+    height: 300%;
+
+    background:
+        linear-gradient(
+            90deg,
+            transparent,
+            rgba(255,255,255,.2),
+            transparent
+        );
+
+    transform: rotate(20deg);
+
+    transition:
+        left .8s var(--spring);
+}
+
+.buttons button:hover::before {
+    left: 150%;
+}
+
+
+/* Bottom glowing line */
+
+.buttons button::after {
+    content: "";
+
+    position: absolute;
+
+    left: 18%;
+    right: 18%;
+    bottom: 0;
+
+    height: 2px;
+
+    background:
+        linear-gradient(
+            90deg,
+            transparent,
+            var(--cyan),
+            transparent
+        );
+
+    box-shadow:
+        0 0 15px var(--cyan);
+
+    opacity: 0;
+
+    transition:
+        .4s var(--spring);
+}
+
+.buttons button:hover::after {
+    left: 7%;
+    right: 7%;
+    opacity: 1;
+}
+
+.buttons button:hover {
+    transform:
+        translateY(-11px)
+        perspective(700px)
+        rotateX(5deg);
+
+    border-color:
+        rgba(85,246,229,.35);
+
+    background:
+        linear-gradient(
+            145deg,
+            rgba(85,246,229,.08),
+            rgba(155,124,255,.025)
+        );
+
+    box-shadow:
+        0 28px 55px rgba(0,0,0,.4),
+        0 0 40px rgba(85,246,229,.08);
+}
+
+.buttons button:active {
+    transform:
+        translateY(-2px)
+        scale(.91)
+        rotateX(8deg);
+
+    transition:
+        transform .08s ease;
+}
+
+.buttons button:focus-visible {
+    outline: none;
+
+    box-shadow:
+        0 0 0 3px rgba(85,246,229,.14),
+        0 0 0 5px var(--cyan),
+        0 0 35px rgba(85,246,229,.3);
+}
+
+
+/* Rock */
+
+#rock:hover {
+    border-color: rgba(255,84,112,.55);
+
+    box-shadow:
+        0 25px 50px rgba(0,0,0,.4),
+        var(--red-glow);
+}
+
+#rock::after {
+    background:
+        linear-gradient(
+            90deg,
+            transparent,
+            var(--red),
+            transparent
+        );
+
+    box-shadow:
+        0 0 15px var(--red);
+}
+
+
+/* Paper */
+
+#paper:hover {
+    border-color: rgba(85,246,229,.55);
+
+    box-shadow:
+        0 25px 50px rgba(0,0,0,.4),
+        var(--cyan-glow);
+}
+
+#paper::after {
+    background:
+        linear-gradient(
+            90deg,
+            transparent,
+            var(--cyan),
+            transparent
+        );
+
+    box-shadow:
+        0 0 15px var(--cyan);
+}
+
+
+/* Scissors */
+
+#scissors:hover {
+    border-color: rgba(155,124,255,.58);
+
+    box-shadow:
+        0 25px 50px rgba(0,0,0,.4),
+        var(--purple-glow);
+}
+
+#scissors::after {
+    background:
+        linear-gradient(
+            90deg,
+            transparent,
+            var(--purple),
+            transparent
+        );
+
+    box-shadow:
+        0 0 15px var(--purple);
+}
+
+
+/* =========================
+   14. Result Display
+   ========================= */
+
+#result {
+    position: relative;
+
+    width: 100%;
+    min-height: 64px;
+
+    margin: 0 0 20px;
+    padding: 15px 20px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border:
+        1px solid rgba(255,255,255,.065);
+
+    border-radius: 16px;
+
+    color: var(--text);
+
+    background:
+        linear-gradient(
+            90deg,
+            rgba(255,255,255,.015),
+            rgba(85,246,229,.025),
+            rgba(255,255,255,.015)
+        );
+
+    font-size: .82rem;
+    font-weight: 750;
+
+    text-align: center;
+
+    overflow: hidden;
+
+    transition:
+        .45s var(--spring);
+
+    animation:
+        resultBreath
+        4s
+        ease-in-out
+        infinite;
+}
+
+
+/* Scanner effect */
+
+#result::before {
+    content: "";
+
+    position: absolute;
+
+    top: 0;
+    bottom: 0;
+
+    width: 100px;
+
+    background:
+        linear-gradient(
+            90deg,
+            transparent,
+            rgba(85,246,229,.15),
+            transparent
+        );
+
+    transform: translateX(-160%);
+
+    animation:
+        resultScanner
+        4s
+        linear
+        infinite;
+}
+
+
+/* =========================
+   15. Result States
+   ========================= */
+
+#result.win,
+.game-card.win #result {
+    color: var(--cyan-bright);
+
+    border-color:
+        rgba(85,246,229,.35);
+
+    background:
+        linear-gradient(
+            90deg,
+            rgba(85,246,229,.035),
+            rgba(85,246,229,.095),
+            rgba(85,246,229,.035)
+        );
+
+    box-shadow:
+        var(--cyan-glow),
+        inset 0 0 30px rgba(85,246,229,.035);
+
+    animation:
+        winImpact
+        .7s
+        var(--spring);
+}
+
+
+#result.lose,
+.game-card.lose #result {
+    color: var(--red);
+
+    border-color:
+        rgba(255,84,112,.35);
+
+    background:
+        linear-gradient(
+            90deg,
+            rgba(255,84,112,.035),
+            rgba(255,84,112,.09),
+            rgba(255,84,112,.035)
+        );
+
+    box-shadow:
+        var(--red-glow),
+        inset 0 0 30px rgba(255,84,112,.035);
+
+    animation:
+        lossImpact
+        .7s
+        var(--spring);
+}
+
+
+#result.tie,
+.game-card.tie #result {
+    color: var(--gold);
+
+    border-color:
+        rgba(255,200,87,.35);
+
+    background:
+        linear-gradient(
+            90deg,
+            rgba(255,200,87,.035),
+            rgba(255,200,87,.09),
+            rgba(255,200,87,.035)
+        );
+
+    box-shadow:
+        var(--gold-glow),
+        inset 0 0 30px rgba(255,200,87,.035);
+
+    animation:
+        tieImpact
+        .7s
+        var(--spring);
+}
+
+
+/* =========================
+   16. Reset Button
+   ========================= */
+
+#reset-btn {
+    position: relative;
+
+    display: block;
+
+    margin: 0 auto;
+
+    padding: 11px 23px;
+
+    border:
+        1px solid rgba(255,255,255,.1);
+
+    border-radius: 999px;
+
+    color: var(--muted);
+
+    background:
+        rgba(255,255,255,.02);
+
+    font-size: .61rem;
+    font-weight: 900;
+
+    letter-spacing: .15em;
+
+    text-transform: uppercase;
+
+    cursor: pointer;
+
+    overflow: hidden;
+
+    transition:
+        .4s var(--spring);
+}
+
+#reset-btn::before {
+    content: "";
+
+    position: absolute;
+    inset: 0;
+
+    background:
+        linear-gradient(
+            90deg,
+            transparent,
+            rgba(255,95,162,.15),
+            transparent
+        );
+
+    transform: translateX(-110%);
+
+    transition:
+        .6s var(--spring);
+}
+
+#reset-btn:hover::before {
+    transform: translateX(110%);
+}
+
+#reset-btn:hover {
+    color: white;
+
+    border-color:
+        rgba(255,95,162,.5);
+
+    background:
+        rgba(255,95,162,.06);
+
+    box-shadow:
+        0 0 18px rgba(255,95,162,.35),
+        0 0 40px rgba(255,95,162,.1);
+
+    transform: translateY(-4px);
+}
+
+#reset-btn:active {
+    transform: scale(.92);
+}
+
+
+/* =========================
+   17. Match History
+   ========================= */
+
+.history-container {
+    width: 100%;
+    margin-top: 40px;
+}
+
+.history-container h3 {
+    position: relative;
+
+    margin: 0 0 14px;
+    padding-bottom: 12px;
+
+    color: var(--dim);
+
+    font-size: .61rem;
+    font-weight: 900;
+
+    letter-spacing: .2em;
+    text-transform: uppercase;
+
+    border-bottom:
+        1px solid rgba(255,255,255,.055);
+}
+
+.history-container h3::before {
+    content: "◉";
+
+    margin-right: 8px;
+
+    color: var(--cyan);
+
+    text-shadow:
+        0 0 10px var(--cyan);
+}
+
+.history-container h3::after {
+    content: "";
+
+    position: absolute;
+
+    left: 0;
+    bottom: -1px;
+
+    width: 80px;
+    height: 1px;
+
+    background:
+        linear-gradient(
+            90deg,
+            var(--cyan),
+            transparent
+        );
+
+    box-shadow:
+        0 0 10px var(--cyan);
+}
+
+#history-list {
+    max-height: 190px;
+
+    margin: 0;
+    padding: 0;
+
+    display: flex;
+    flex-direction: column;
+
+    gap: 7px;
+
+    list-style: none;
+
+    overflow-y: auto;
+
+    scrollbar-width: thin;
+
+    scrollbar-color:
+        rgba(85,246,229,.35)
+        transparent;
+}
+
+#history-list::-webkit-scrollbar {
+    width: 3px;
+}
+
+#history-list::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+#history-list::-webkit-scrollbar-thumb {
+    background:
+        linear-gradient(
+            var(--cyan),
+            var(--purple)
+        );
+
+    border-radius: 99px;
+}
+
+#history-list li {
+    position: relative;
+
+    padding: 12px 15px;
+
+    border:
+        1px solid rgba(255,255,255,.04);
+
+    border-radius: 11px;
+
+    color: var(--muted);
+
+    background:
+        rgba(255,255,255,.015);
+
+    font-size: .72rem;
+
+    transition:
+        .35s var(--spring);
+
+    animation:
+        historyEnter
+        .5s
+        var(--spring)
+        both;
+}
+
+#history-list li::before {
+    content: "";
+
+    position: absolute;
+
+    left: 0;
+    top: 25%;
+
+    width: 2px;
+    height: 50%;
+
+    background: var(--cyan);
+
+    box-shadow:
+        0 0 10px var(--cyan);
+
+    opacity: .6;
+}
+
+#history-list li:hover {
+    transform: translateX(6px);
+
+    border-color:
+        rgba(85,246,229,.18);
+
+    color: #c8ddda;
+
+    background:
+        rgba(85,246,229,.025);
+
+    box-shadow:
+        0 10px 25px rgba(0,0,0,.15);
+}
+
+
+/* =========================
+   18. Mobile
+   ========================= */
+
+@media (max-width: 600px) {
+
+    body {
+        padding: 10px;
+    }
+
+    .game-card {
+        padding: 26px 17px;
+        border-radius: 28px;
+    }
+
+    h1 {
+        font-size:
+            clamp(2rem, 12vw, 2.8rem);
+
+        margin-bottom: 34px;
+    }
+
+    .score-box {
+        min-height: 100px;
+        border-radius: 18px;
+    }
+
+    .battlefield {
+        gap: 8px;
+    }
+
+    .choice-display {
+        width: min(125px, 100%);
+    }
+
+    .vs {
+        width: 44px;
+        height: 44px;
+    }
+
+    .buttons {
+        gap: 9px;
+    }
+
+    .buttons button {
+        min-height: 84px;
+        border-radius: 17px;
+    }
+}
+
+
+/* =========================
+   19. Very Small Phones
+   ========================= */
+
+@media (max-width: 390px) {
+
+    body {
+        padding: 6px;
+    }
+
+    .game-card {
+        padding: 22px 12px;
+    }
+
+    .mode-select {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    #game-mode {
+        width: 100%;
+    }
+
+    .choice-display {
+        width: 105px;
+        font-size: 2.7rem;
+    }
+
+    .vs {
+        width: 37px;
+        height: 37px;
+    }
+
+    .buttons button {
+        min-height: 70px;
+        font-size: 2rem;
+    }
+}
+
+
+/* =========================
+   20. Reduced Motion
+   ========================= */
+
+@media (prefers-reduced-motion: reduce) {
+
+    *,
+    *::before,
+    *::after {
+        animation-duration: .01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: .01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+
+/* =========================================================
+   21. Animation Section
+   ========================================================= */
+
+
+/* Card appears from depth */
+
+@keyframes cardEntrance {
+
+    from {
+        opacity: 0;
+
+        transform:
+            translateY(40px)
+            scale(.94)
+            rotateX(7deg);
+
+        filter: blur(14px);
+    }
+
+    to {
+        opacity: 1;
+
+        transform:
+            translateY(0)
+            scale(1)
+            rotateX(0);
+
+        filter: blur(0);
+    }
+}
+
+
+/* Slow atmospheric movement */
+
+@keyframes backgroundDrift {
+
+    0% {
+        transform: translate3d(-2%, -1%, 0) scale(1);
+    }
+
+    50% {
+        transform: translate3d(2%, 1%, 0) scale(1.04);
+    }
+
+    100% {
+        transform: translate3d(-1%, 2%, 0) scale(1.02);
+    }
+}
+
+
+/* Technical grid movement */
+
+@keyframes gridScroll {
+
+    from {
+        background-position: 0 0;
+    }
+
+    to {
+        background-position: 55px 55px;
+    }
+}
+
+
+/* Holographic card border */
+
+@keyframes hologramSpin {
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+
+/* Card reactor light */
+
+@keyframes reactorBreath {
+
+    0%,
+    100% {
+        opacity: .35;
+
+        transform:
+            translateX(-50%)
+            scale(.82);
+    }
+
+    50% {
+        opacity: 1;
+
+        transform:
+            translateX(-50%)
+            scale(1.18);
+    }
+}
+
+
+/* Heading entrance */
+
+@keyframes titleEntrance {
+
+    from {
+        opacity: 0;
+
+        transform:
+            translateY(20px)
+            scale(.9);
+    }
+
+    to {
+        opacity: 1;
+
+        transform:
+            translateY(0)
+            scale(1);
+    }
+}
+
+
+/* Heading light sweep */
+
+@keyframes titleShimmer {
+
+    to {
+        background-position: 250% center;
+    }
+}
+
+
+/* Small line below title */
+
+@keyframes titleLine {
+
+    0%,
+    100% {
+        width: 65px;
+        opacity: .35;
+    }
+
+    50% {
+        width: 130px;
+        opacity: 1;
+    }
+}
+
+
+/* High-score floating motion */
+
+@keyframes badgeFloat {
+
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-3px);
+    }
+}
+
+
+/* Battle pod rotating ring */
+
+@keyframes podRotation {
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+
+/* Battle pod energy */
+
+@keyframes podPulse {
+
+    0%,
+    100% {
+        opacity: .25;
+        transform: scale(.82);
+    }
+
+    50% {
+        opacity: .9;
+        transform: scale(1.15);
+    }
+}
+
+
+/* VS floating */
+
+@keyframes vsHover {
+
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-5px);
+    }
+}
+
+
+/* Tiny core */
+
+@keyframes corePulse {
+
+    0%,
+    100% {
+        opacity: .3;
+        transform: scale(.7);
+    }
+
+    50% {
+        opacity: 1;
+        transform: scale(1.3);
+    }
+}
+
+
+/* Battlefield energy */
+
+@keyframes energyLine {
+
+    0%,
+    100% {
+        opacity: .35;
+        transform: translateY(-50%) scaleX(.85);
+    }
+
+    50% {
+        opacity: .9;
+        transform: translateY(-50%) scaleX(1);
+    }
+}
+
+
+/* Result idle animation */
+
+@keyframes resultBreath {
+
+    0%,
+    100% {
+        box-shadow:
+            inset 0 0 25px
+            rgba(85,246,229,.01);
+    }
+
+    50% {
+        box-shadow:
+            inset 0 0 40px
+            rgba(85,246,229,.035);
+    }
+}
+
+
+/* Result scanning beam */
+
+@keyframes resultScanner {
+
+    0% {
+        transform: translateX(-170%);
+    }
+
+    55%,
+    100% {
+        transform: translateX(650%);
+    }
+}
+
+
+/* Win impact */
+
+@keyframes winImpact {
+
+    0% {
+        transform: scale(.96);
+    }
+
+    45% {
+        transform:
+            scale(1.025);
+
+        filter: brightness(1.4);
+    }
+
+    100% {
+        transform: scale(1);
+    }
+}
+
+
+/* Lose impact */
+
+@keyframes lossImpact {
+
+    0% {
+        transform: translateX(0);
+    }
+
+    20% {
+        transform: translateX(-6px);
+    }
+
+    40% {
+        transform: translateX(6px);
+    }
+
+    60% {
+        transform: translateX(-4px);
+    }
+
+    80% {
+        transform: translateX(3px);
+    }
+
+    100% {
+        transform: translateX(0);
+    }
+}
+
+
+/* Tie impact */
+
+@keyframes tieImpact {
+
+    0% {
+        transform: scale(.96);
+    }
+
+    50% {
+        transform: scale(1.025);
+    }
+
+    100% {
+        transform: scale(1);
+    }
+}
+
+
+/* History item entrance */
+
+@keyframes historyEnter {
+
+    from {
+        opacity: 0;
+
+        transform:
+            translateX(-15px)
+            scale(.96);
+    }
+
+    to {
+        opacity: 1;
+
+        transform:
+            translateX(0)
+            scale(1);
+    }
+}
